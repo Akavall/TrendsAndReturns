@@ -34,7 +34,7 @@ def reshape_and_clean_data(df, valid_obs_number):
     return pivoted
 
 
-def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, n_train, rows_to_keep):
+def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, n_train, n_validation, rows_to_keep):
     sampled_df = clean_data_first[clean_data_first.index.isin(rows_to_keep)]
     percent_df = sampled_df.pct_change(1).drop(sampled_df.index[[0]])
     percent_df_first = percent_df.drop(["date"], axis=1)
@@ -56,15 +56,21 @@ def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, 
 
     all_ids = np.arange(len(stocks))
 
-    training_ids = np.random.choice(np.arange(len(stocks)), n_train, replace=False)
+    training_and_validation_ids = np.random.choice(np.arange(len(stocks)), n_train + n_validation, replace=False)
+    training_ids = training_and_validation_ids[:n_train]
+    validation_ids = training_and_validation_ids[n_train:]
     print(f"using {len(training_ids)} training ids")
-    test_ids = np.setdiff1d(all_ids, training_ids)
+    print(f"using {len(validation_ids)} validation_ids")
+    test_ids = np.setdiff1d(all_ids, training_and_validation_ids)
     print(f"using {len(test_ids)} test ids")
 
     training_stocks = stocks[training_ids]
     training_labels = labels[training_ids]
 
+    validation_stocks = stocks[validation_ids]
+    validation_labels = labels[validation_ids]
+
     test_stocks = stocks[test_ids]
     test_labels = labels[test_ids]
 
-    return training_stocks, training_labels, test_stocks, test_labels
+    return training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels

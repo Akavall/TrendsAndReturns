@@ -17,10 +17,11 @@ data_2018 = pd.read_csv("2018_data.csv")
 clean_data_2017 = reshape_and_clean_data(data_2017, valid_obs_number=251)
 clean_data_2018 = reshape_and_clean_data(data_2018, valid_obs_number=251)
 
-training_stocks, training_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
+training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
                                                                                     clean_data_2018,
                                                                                     returns_period=125,
-                                                                                    n_train=4000,
+                                                                                    n_train=3200,
+                                                                                    n_validation=800,
                                                                                     rows_to_keep=range(0, 251, 20)
                                                                                     )
 
@@ -28,6 +29,12 @@ training_stocks, training_labels, test_stocks, test_labels = prepare_train_and_t
 #convert to torch types
 stocks_torch = torch.from_numpy(np.array(training_stocks)).float()
 stocks_torch = stocks_torch.T.reshape(stocks_torch.shape[1], stocks_torch.shape[0], -1)                                                                                  
+validation_stocks_torch = torch.from_numpy(np.array(validation_stocks)).float()
+validation_stocks_torch = validation_stocks_torch.T.reshape(validation_stocks_torch.shape[1],
+                                                            validation_stocks_torch.shape[0],
+                                                            -1
+)
+
 labels_torch = torch.from_numpy(np.array(training_labels)).float()
 
 test_stocks_torch = torch.from_numpy(np.array(test_stocks)).float()
@@ -46,7 +53,6 @@ BATCH_SIZE = 32
 for epoch in range(100):
 
     permutation = torch.randperm(stocks_torch.size(1))
-
     epoch_loss = 0
 
     for i in range(0, stocks_torch.size(1), BATCH_SIZE):
@@ -57,6 +63,7 @@ for epoch in range(100):
 
         batch_stocks = stocks_torch[:, indicies, :]
         batch_labels = labels_torch[indicies]
+        batch_labels = batch_labels.reshape(1, -1)
 
         output = model(batch_stocks)
 
@@ -67,7 +74,15 @@ for epoch in range(100):
 
         epoch_loss += loss
 
-    print(f"Epoch: {epoch}, loss: {epoch_loss}")
+    with torch.no_grad():
+
+        preds_torch = model(validation_stocks_torch)
+        preds = preds_torch.cpu().detach().numpy()[0]
+
+        mse_score = mean_squared_error(validation_labels, preds)
+
+    print(f"Epoch: {epoch}, loss: {epoch_loss}, validation mse_score: {mse_score}")
+
 
 
 test = [[0.1] * 12,

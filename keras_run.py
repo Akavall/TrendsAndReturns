@@ -18,10 +18,11 @@ data_2018 = pd.read_csv("2018_data.csv")
 clean_data_2017 = reshape_and_clean_data(data_2017, valid_obs_number=251)
 clean_data_2018 = reshape_and_clean_data(data_2018, valid_obs_number=251)
 
-training_stocks, training_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
+training_stocks, training_labels, _, _, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
                                                                                     clean_data_2018,
                                                                                     returns_period=125,
                                                                                     n_train=4000,
+                                                                                    n_validation=0,
                                                                                     rows_to_keep=range(0, 251, 20))
 
 
