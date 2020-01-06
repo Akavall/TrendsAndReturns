@@ -31,7 +31,6 @@ test_stocks = np.expand_dims(test_stocks, axis=2)
 
 model = Sequential()
 
-# model.add(LSTM(1))
 model.add(GRU(6, batch_input_shape=(32, 12, 1)))
 model.add(Dense(1))
 
@@ -43,21 +42,6 @@ model.compile(loss="mean_squared_error", optimizer=adam)
 history = model.fit(training_stocks, training_labels, epochs=100, validation_split=0.2)
 
 # number of predictions needs to be divisible by batch size, hense the weirdness....
-
-# https://stackoverflow.com/questions/43702481/why-does-keras-lstm-batch-size-used-for-prediction-have-to-be-the-same-as-fittin
-# def create_model(batch_size, sl):
-#     model = Sequential()
-#     model.add(LSTM(1, batch_input_shape=(batch_size, sl, 1), stateful=True))
-#     model.add(Dense(1))
-#     return model
-
-# import ipdb 
-# ipdb.set_trace()
-
-# model_predict = create_model(batch_size=5, sl=12)
-# weights = model.get_weights()
-# model_predict.set_weights(weights)
-
 
 results = model.predict(test_stocks[:1024 + 32])[:, 0]
 test_labels = test_labels[:1024 + 32]

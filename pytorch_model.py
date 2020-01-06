@@ -17,24 +17,10 @@ class RNNRegressor(nn.Module):
     def forward(self, input):
         batch_size = input.size(1)
 
-        # This bit is very interesting...
-        # input = input.t()
-
         hidden = self._init_hidden(batch_size)
-
         output, hidden = self.gru(input, hidden)
-        # print("GRU hidden output: {hidden.size()}")
-
-        # hidden is equal to output[-1], NO IT IS NOT, using hidden does not work!
-
         fc_output = self.fc(output[-1])
-        # print(f"FC output: {fc_output.size()}")
-
         fc_output = fc_output.reshape(fc_output.shape[1], -1)
-        # fc_output = F.log_softmax(fc_output, dim=1)
-
-        # not 100% sure about the softmax...
-        # the results seem to make more sense without it
 
         return fc_output
 
