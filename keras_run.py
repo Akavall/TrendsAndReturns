@@ -31,7 +31,7 @@ test_stocks = np.expand_dims(test_stocks, axis=2)
 
 model = Sequential()
 
-model.add(GRU(6, batch_input_shape=(32, 12, 1)))
+model.add(GRU(6))
 model.add(Dense(1))
 
 adam = optimizers.Adam(lr=0.001, decay=0.00001)
@@ -39,18 +39,14 @@ adam = optimizers.Adam(lr=0.001, decay=0.00001)
 
 model.compile(loss="mean_squared_error", optimizer=adam)
 
-history = model.fit(training_stocks, training_labels, epochs=100, validation_split=0.2)
+history = model.fit(training_stocks, training_labels, epochs=10, validation_split=0.2, batch_size=32)
 
-# number of predictions needs to be divisible by batch size, hense the weirdness....
-
-results = model.predict(test_stocks[:1024 + 32])[:, 0]
-test_labels = test_labels[:1024 + 32]
+results = model.predict(test_stocks)[:, 0]
+test_labels = test_labels
 
 mse_score = mean_squared_error(test_labels, results)
 
 print(f"mse_score: {mse_score}")
-
-another_test = np.zeros((32, 12))
 
 test = [[0.1] * 12,
         [0.2, -0.1] * 6,
@@ -59,11 +55,8 @@ test = [[0.1] * 12,
         [-0.05] * 12,
         [-0.1] * 12,]
 
-for i in range(len(test)):
-    another_test[i] = test[i]
-
-another_test = np.expand_dims(another_test, axis=2)
+another_test = np.expand_dims(np.array(test), axis=2)
 
 results = model.predict(another_test)
 
-print(results[:6])
+print(results)
