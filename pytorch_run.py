@@ -7,22 +7,22 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from model import RNNRegressor
+from pytorch_model import RNNRegressor
 
 from data_formating import reshape_and_clean_data, prepare_train_and_test
 
-data_2017 = pd.read_csv("2017_data.csv")
-data_2018 = pd.read_csv("2018_data.csv")
+data_first = pd.read_csv("2016_data.csv")
+data_second = pd.read_csv("2017_data.csv")
 
-clean_data_2017 = reshape_and_clean_data(data_2017, valid_obs_number=251)
-clean_data_2018 = reshape_and_clean_data(data_2018, valid_obs_number=251)
+clean_data_first, valid_obs_first = reshape_and_clean_data(data_first)
+clean_data_second, valid_obs_second = reshape_and_clean_data(data_second)
 
-training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
-                                                                                    clean_data_2018,
+training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_first,
+                                                                                    clean_data_second,
                                                                                     returns_period=125,
                                                                                     n_train=3200,
                                                                                     n_validation=800,
-                                                                                    rows_to_keep=range(0, 251, 20)
+                                                                                    rows_to_keep=range(0, valid_obs_first, 20)
                                                                                     )
 
 

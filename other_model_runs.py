@@ -9,14 +9,18 @@ from sklearn.metrics import mean_squared_error
 
 from data_formating import reshape_and_clean_data, prepare_train_and_test
 
-data_2017 = pd.read_csv("2017_data.csv")
-data_2018 = pd.read_csv("2018_data.csv")
+# data_2017 = pd.read_csv("2017_data.csv")
+# data_2018 = pd.read_csv("2018_data.csv")
 
-clean_data_2017 = reshape_and_clean_data(data_2017, valid_obs_number=251)
-clean_data_2018 = reshape_and_clean_data(data_2018, valid_obs_number=251)
+data_first = pd.read_csv("2016_data.csv")
+data_second = pd.read_csv("2017_data.csv")
 
-training_stocks, training_labels, _, _, test_stocks, test_labels = prepare_train_and_test(clean_data_2017,
-                                                                                    clean_data_2018,
+
+clean_data_first, _ = reshape_and_clean_data(data_first)
+clean_data_second, _ = reshape_and_clean_data(data_second)
+
+training_stocks, training_labels, _, _, test_stocks, test_labels = prepare_train_and_test(clean_data_first,
+                                                                                    clean_data_second,
                                                                                     returns_period=125,
                                                                                     n_train=4000,
                                                                                     n_validation=0,

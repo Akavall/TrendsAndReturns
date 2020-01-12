@@ -2,9 +2,14 @@
 import numpy as np
 import pandas as pd 
 
-def reshape_and_clean_data(df, valid_obs_number):
+def reshape_and_clean_data(df, valid_obs_number=None):
 
     df_counts = df.groupby(["PERMNO"]).count()
+
+    if valid_obs_number is None:
+        valid_obs_number = int(df_counts["PRC"].mode())
+        print(f"valid_obs_number is set to {valid_obs_number}")
+
     df_valid = df_counts[df_counts["date"] == valid_obs_number]
     df_valid = df_valid[df_valid["PRC"] == valid_obs_number]
 
@@ -31,7 +36,7 @@ def reshape_and_clean_data(df, valid_obs_number):
     pivoted = clean_data.pivot(index="date", columns="PERMNO", values="PRC")
     pivoted = pivoted.reset_index()
 
-    return pivoted
+    return pivoted, valid_obs_number
 
 
 def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, n_train, n_validation, rows_to_keep):
