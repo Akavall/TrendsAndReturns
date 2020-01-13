@@ -12,19 +12,26 @@ from data_formating import reshape_and_clean_data, prepare_train_and_test
 # data_2017 = pd.read_csv("2017_data.csv")
 # data_2018 = pd.read_csv("2018_data.csv")
 
-data_first = pd.read_csv("2016_data.csv")
-data_second = pd.read_csv("2017_data.csv")
-
+data_first = pd.read_csv("2017_data.csv")
+data_second = pd.read_csv("2018_data.csv")
 
 clean_data_first, _ = reshape_and_clean_data(data_first)
 clean_data_second, _ = reshape_and_clean_data(data_second)
 
-training_stocks, training_labels, _, _, test_stocks, test_labels = prepare_train_and_test(clean_data_first,
-                                                                                    clean_data_second,
-                                                                                    returns_period=125,
-                                                                                    n_train=4000,
-                                                                                    n_validation=0,
-                                                                                    rows_to_keep=range(0, 251, 20))
+temp = prepare_train_and_test(clean_data_first,
+                              clean_data_second,
+                                returns_period=125,
+                                n_train=4000,
+                                n_validation=0,
+                                rows_to_keep=range(0, 251, 20))
+
+
+training_stocks_df, training_returns_df, _, _, test_stocks_df, test_returns_df = temp
+
+training_stocks = training_stocks_df.T 
+training_labels = training_returns_df.iloc[[0]].T
+test_stocks = test_stocks_df.T 
+test_labels = test_returns_df.iloc[[0]].T
 
 training_mean = np.mean(training_stocks, axis=1)
 training_stdev = np.std(training_stocks, axis=1)

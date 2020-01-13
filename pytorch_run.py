@@ -17,13 +17,22 @@ data_second = pd.read_csv("2017_data.csv")
 clean_data_first, valid_obs_first = reshape_and_clean_data(data_first)
 clean_data_second, valid_obs_second = reshape_and_clean_data(data_second)
 
-training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels = prepare_train_and_test(clean_data_first,
-                                                                                    clean_data_second,
-                                                                                    returns_period=125,
-                                                                                    n_train=3200,
-                                                                                    n_validation=800,
-                                                                                    rows_to_keep=range(0, valid_obs_first, 20)
-                                                                                    )
+temp = prepare_train_and_test(clean_data_first,
+                              clean_data_second,
+                                returns_period=125,
+                                n_train=3200,
+                                n_validation=800,
+                                rows_to_keep=range(0, valid_obs_first, 20))
+
+
+training_stocks_df, training_returns_df, validation_stocks_df, validation_returns_df, test_stocks_df, test_returns_df = temp
+
+training_stocks = training_stocks_df.T 
+training_labels = training_returns_df.iloc[[0]].T
+validation_stocks = validation_stocks_df.T
+validation_labels = validation_returns_df.iloc[[0]].T
+test_stocks = test_stocks_df.T 
+test_labels = test_returns_df.iloc[[0]].T
 
 
 #convert to torch types
@@ -50,7 +59,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
 
 BATCH_SIZE = 32
 
-for epoch in range(100):
+for epoch in range(20):
 
     permutation = torch.randperm(stocks_torch.size(1))
     epoch_loss = 0

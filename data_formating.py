@@ -17,7 +17,7 @@ def reshape_and_clean_data(df, valid_obs_number=None):
     clean_data = df[df["PERMNO"].isin(df_valid.index)]
     print(f"shape of df: {clean_data.shape}")
 
-    temp = clean_data[clean_data["FACSHR"] > 0]
+    temp = clean_data[(clean_data["FACSHR"] > 0) | (clean_data["FACSHR"] < 0)]
     permnos_with_splits = temp["PERMNO"].unique()
     print(f"found: {len(permnos_with_splits)} permnos with splits")
 
@@ -41,13 +41,14 @@ def reshape_and_clean_data(df, valid_obs_number=None):
 
 def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, n_train, n_validation, rows_to_keep):
     sampled_df = clean_data_first[clean_data_first.index.isin(rows_to_keep)]
+
     percent_df = sampled_df.pct_change(1).drop(sampled_df.index[[0]])
     percent_df_first = percent_df.drop(["date"], axis=1)
 
     percent_df_second = clean_data_second.pct_change(returns_period).drop(clean_data_second.index[range(0, returns_period)])
     percent_df_second = percent_df_second.drop(["date"], axis=1)
 
-    common_permnos = temp = np.intersect1d(percent_df_first.columns, percent_df_second.columns)
+    common_permnos = np.intersect1d(percent_df_first.columns, percent_df_second.columns)
 
     print(f"common_permnos found: {len(common_permnos)}")
 
@@ -56,26 +57,33 @@ def prepare_train_and_test(clean_data_first, clean_data_second, returns_period, 
 
     assert(np.sum(percent_df_first.columns == percent_df_second.columns) == len(percent_df_first.columns))
 
-    stocks = percent_df_first = np.array(percent_df_first).T
-    labels = np.array(percent_df_second.iloc[[0]])[0]
+    # stocks = percent_df_first = np.array(percent_df_first).T
+    # labels = np.array(percent_df_second.iloc[[0]])[0]
 
-    all_ids = np.arange(len(stocks))
+    # all_ids = np.arange(len(stocks))
 
-    training_and_validation_ids = np.random.choice(np.arange(len(stocks)), n_train + n_validation, replace=False)
-    training_ids = training_and_validation_ids[:n_train]
-    validation_ids = training_and_validation_ids[n_train:]
-    print(f"using {len(training_ids)} training ids")
-    print(f"using {len(validation_ids)} validation_ids")
-    test_ids = np.setdiff1d(all_ids, training_and_validation_ids)
-    print(f"using {len(test_ids)} test ids")
+    all_permnos = percent_df_first.columns
 
-    training_stocks = stocks[training_ids]
-    training_labels = labels[training_ids]
+    training_and_validation_permnos = np.random.choice(all_permnos, n_train + n_validation, replace=False)
+    training_permnos = training_and_validation_permnos[:n_train]
+    validation_permnos = training_and_validation_permnos[n_train:]
+    print(f"using {len(training_permnos)} training ids")
+    print(f"using {len(validation_permnos)} validation_ids")
+    test_permnos = np.setdiff1d(all_permnos, training_and_validation_permnos)
+    print(f"using {len(test_permnos)} test ids")
 
-    validation_stocks = stocks[validation_ids]
-    validation_labels = labels[validation_ids]
+    training_stocks_df = percent_df_first[training_permnos]
+    training_returns_df = percent_df_second[training_permnos]
 
-    test_stocks = stocks[test_ids]
-    test_labels = labels[test_ids]
+    validation_stocks_df = percent_df_first[validation_permnos]
+    validation_returns_df = percent_df_second[validation_permnos]
 
-    return training_stocks, training_labels, validation_stocks, validation_labels, test_stocks, test_labels
+    test_stocks_df = percent_df_first[test_permnos]
+    test_returns_df = percent_df_second[test_permnos]
+
+    return (training_stocks_df, 
+            training_returns_df,
+            validation_stocks_df,
+            validation_returns_df,
+            test_stocks_df,
+            test_returns_df)
