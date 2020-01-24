@@ -11,8 +11,8 @@ from pytorch_model import RNNRegressor
 
 from data_formating import reshape_and_clean_data, prepare_train_and_test
 
-data_first = pd.read_csv("2016_data.csv")
-data_second = pd.read_csv("2017_data.csv")
+data_first = pd.read_csv("2017_data.csv")
+data_second = pd.read_csv("2018_data.csv")
 
 clean_data_first, valid_obs_first = reshape_and_clean_data(data_first)
 clean_data_second, valid_obs_second = reshape_and_clean_data(data_second)
@@ -117,7 +117,15 @@ with torch.no_grad():
     preds = preds_torch.cpu().detach().numpy()[0]
 
     mse_score = mean_squared_error(test_labels, preds)
-
     print(f"mse_score: {mse_score}")
+    # predicting that price didn't change
+    mse_score_zeros = mean_squared_error(test_labels, np.zeros(len(preds)))
+    print(f"mse_score zeros: {mse_score_zeros}")
+
+    if mse_score < mse_score_zeros:
+        print(f"Success: did better that zeros by {mse_score_zeros - mse_score}")
+    else: 
+        print(f"Could not beat zeros, missed by: {mse_score_zeros - mse_score}")
+
 
     
