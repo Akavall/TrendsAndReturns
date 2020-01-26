@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd 
+from sklearn.linear_model import LinearRegression
 
 from sklearn.metrics import mean_squared_error
 
@@ -126,6 +127,33 @@ with torch.no_grad():
         print(f"Success: did better that zeros by {mse_score_zeros - mse_score}")
     else: 
         print(f"Could not beat zeros, missed by: {mse_score_zeros - mse_score}")
+
+
+# Let's do an ugly hack for OLS
+
+training_mean = np.mean(training_stocks, axis=1)
+training_stdev = np.std(training_stocks, axis=1)
+
+features = pd.DataFrame({"mean": training_mean, 
+                         "stdev": training_stdev})
+
+test_features = pd.DataFrame({"mean": np.mean(test_stocks, axis=1),
+                              "stdev": np.std(test_stocks, axis=1)})
+                              
+model = LinearRegression()
+model.fit(features, training_labels)
+
+other_model_preds = model.predict(test_features)
+
+other_model_mse_score = mean_squared_error(test_labels, other_model_preds)
+print(f"other_model_mse_result: {other_model_mse_score}")
+
+if mse_score < other_model_mse_score:
+    print(f"Success: did better than other model by {other_model_mse_score - mse_score}")
+else: 
+    print(f"Could not beat other model, missed by: {other_model_mse_score - mse_score}")
+
+
 
 
     
