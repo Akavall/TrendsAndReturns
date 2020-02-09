@@ -14,11 +14,13 @@ from data_formating import reshape_and_clean_data, prepare_train_and_test
 
 import json
 
-data_first = pd.read_csv("2017_data.csv")
-data_second = pd.read_csv("2018_data.csv")
+data_first = pd.read_csv("2016_data.csv")
+data_second = pd.read_csv("2017_data.csv")
+data_third = pd.read_csv("2018_data.csv")
 
 clean_data_first, valid_obs_first = reshape_and_clean_data(data_first)
 clean_data_second, valid_obs_second = reshape_and_clean_data(data_second)
+clean_data_third, valid_obs_third = reshape_and_clean_data(data_third)
 
 temp = prepare_train_and_test(clean_data_first,
                               clean_data_second,
@@ -26,6 +28,21 @@ temp = prepare_train_and_test(clean_data_first,
                                 n_train=3200,
                                 n_validation=800,
                                 rows_to_keep=range(0, valid_obs_first, 20))
+
+
+temp_2 = prepare_train_and_test(clean_data_second,
+                              clean_data_third,
+                                returns_period=125,
+                                n_train=0,
+                                n_validation=0,
+                                rows_to_keep=range(0, valid_obs_first, 20))
+
+
+ # taking temp from the next period    
+  
+valid_temp = temp[0:4] + temp_2[4:6]
+
+                           
 
 
 def pytorch_run(temp):
@@ -60,11 +77,11 @@ def pytorch_run(temp):
     model = RNNRegressor(input_size, hidden_size, output_size)
 
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0)
 
     BATCH_SIZE = 32
 
-    for epoch in range(20):
+    for epoch in range(30):
 
         permutation = torch.randperm(stocks_torch.size(1))
         epoch_loss = 0
@@ -132,7 +149,7 @@ def pytorch_run(temp):
         else: 
             print(f"Could not beat zeros, missed by: {mse_score_zeros - mse_score}")
 
-        return mse_score
+        return mse_score, mse_score_zeros
 
 
 # Let's do an ugly hack for OLS
@@ -175,8 +192,9 @@ if __name__ == "__main__":
 
     pytorch_result = []
     other_model_result = []
+    zeros_result = []
 
-    for i in range(2):
+    for i in range(50):
 
         temp = prepare_train_and_test(clean_data_first,
                                     clean_data_second,
@@ -185,16 +203,17 @@ if __name__ == "__main__":
                                         n_validation=800,
                                         rows_to_keep=range(0, valid_obs_first, 20))
 
-        pytorch_mse = pytorch_run(temp)
+        pytorch_mse, mse_score_zeros = pytorch_run(valid_temp)
         pytorch_result.append(pytorch_mse)
+        zeros_result.append(mse_score_zeros)
 
-        other_model_mse = other_model_run(temp)
+        other_model_mse = other_model_run(valid_temp)
         other_model_result.append(other_model_mse)
 
 
-    all_result = {"pytorch": pytorch_result, "other_model": other_model_result}
+    all_result = {"pytorch": pytorch_result, "other_model": other_model_result, "zeros_result"}
 
-    with open("test_result.json", "w") as f:
+    with open("run_2016_2017_10.json", "w") as f:
         json.dump(all_result, f)
 
 
